@@ -1,0 +1,72 @@
+string $fileList = "C:/projects/Perforce/Alex_Workspace1/Asset-Master/Michael Foods/Michael Foods Project Joey/Test Cell 1/Assets/HighRes/measurements.txt";
+string $filesDir = "C:/projects/Perforce/Alex_Workspace1/Asset-Master/Michael Foods/Michael Foods Project Joey/Test Cell 1/Assets/HighRes/";
+
+string $productKeys[];
+float $desiredHeights[];
+float $desiredWidths[];
+float $desiredDepths[];
+
+clear $productKeys;
+clear $desiredHeights;
+clear $desiredWidths;
+clear $desiredDepths;
+
+$fileListId = `fopen $fileList "r"`;
+int $currentIndex = 0;
+ while (!`feof $fileListId`) {
+	string $currentLine = `fgetline $fileListId`;
+	
+	string $fields[];
+	tokenizeList($currentLine, $fields);
+	
+	$productKeys[$currentIndex] = $fields[0] + "_hr";
+	$desiredHeights[$currentIndex] = $fields[1];
+	$desiredWidths[$currentIndex] = $fields[2];
+	$desiredDepths[$currentIndex] = $fields[3];
+	
+	$currentIndex += 1;
+}
+fclose $fileListId;
+
+for ($i = 0; $i < $currentIndex; $i += 1) {
+	
+	//gather values for current product
+	string $productKey = $productKeys[$i];
+	float $desiredHeight = $desiredHeights[$i];
+	float $desiredWidth = $desiredWidths[$i];
+	float $desiredDepth = $desiredDepths[$i];
+	
+	//construct the path to the file
+	string $filePath = $filesDir + $productKey + "/" + $productKey + ".mb";
+	
+	///open the file
+	file -force -open ($filePath);
+	
+	currentUnit -l "m";
+	
+	select $productKey;
+	
+	//fix scale factors (make them all 1)
+	channelBoxCommand -freezeAll;
+	
+	//measure the object's current size
+	float $objectWidth = `getAttr ($productKey + ".boundingBoxSizeX")`;
+	float $objectHeight = `getAttr ($productKey + ".boundingBoxSizeY")`;
+	//float $objectDepth = `getAttr ($productKey + ".boundingBoxSizeZ")`;
+	
+	//determine the necessary scale factor to achieve the desired size
+	float $widthScaleFactor = $desiredWidth / $objectWidth;
+	float $heightScaleFactor = $desiredHeight / $objectHeight;
+	//float $depthScaleFactor = $desiredDepth / $objectDepth;
+	
+	//scale producct to new size
+	setAttr ($productKey + ".scaleX") ($widthScaleFactor);
+	setAttr ($productKey + ".scaleY") ($heightScaleFactor);
+	//setAttr ($productKey + ".scaleZ") ($depthScaleFactor);
+	
+	//fix scale factors to 1 again
+	channelBoxCommand -freezeAll;
+	
+	//save changes
+	file -force -save;
+}
