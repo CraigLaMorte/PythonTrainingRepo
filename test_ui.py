@@ -2,7 +2,7 @@ from PySide import QtGui, QtCore
 import maya.OpenMaya as OpenMaya
 from pymel.core import selected
 Signal = QtCore.Signal
-
+#dsajlgkdsjkfdsjklafsldfsf
 class SigController(QtCore.QObject):
     selectionChanged = Signal(list)
 
